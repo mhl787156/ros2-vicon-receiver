@@ -2,7 +2,7 @@
 
 Publisher::Publisher(std::string topic_name, rclcpp::Node* node)
 {
-    position_publisher_ = node->create_publisher<vicon_receiver::msg::Position>(topic_name, 10);
+    position_publisher_ = node->create_publisher<geometry_msgs::msg::PoseStamped>(topic_name, 10);
     is_ready = true;
 }
 
@@ -23,8 +23,8 @@ void Publisher::publish(PositionStruct p)
     
     // Send using PoseStamped msg
     auto msg = std::make_shared<geometry_msgs::msg::PoseStamped>();
-    msg->seq = p.frame_number;
-    msg->header.stamp = p.receive_time()
+    // msg->header.seq = p.frame_number;
+    msg->header.stamp = p.receive_time;
     msg->header.frame_id = "map";
     msg->pose.position.x = p.translation[0];
     msg->pose.position.y = p.translation[1];

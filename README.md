@@ -4,6 +4,34 @@
 
 This is NOT an official ROS2 package and is not supported. The package has been successfully tested with ROS2 Dashing Diademata, ROS2 Foxy and ROS2 Galactic on the operating systems Ubuntu 18.04 Bionic Beaver, Ubuntu 20.04 Focal Fossa and MacOS 10.13 High Sierra.
 
+THIS FORK HAS BEEN DEVELOPED FOR USE ON WINDOWS WITH ROS2 AND THE VICON PACKAGES.
+
+## Windows instructions
+
+See [HOW_TO_BUILD.md](HOW_TO_BUILD.md) for more specific info. 
+
+### Installation
+
+Install vicon Datastream SDK and add that to your path
+
+Install ROS2 according to the ROS2 windows installation 
+
+Install Libboost. You will need to install it AND build it (run bootstrap.bat) AND run `b2.exe --which-thread --which-date_time`. I could not get headers to work, so I copied the entire `boost` directory into `vicon_receiver/include`. 
+
+### Changes from Original
+
+This now outputs a standard `geometry_msgs/msg/PoseStamed` message for each vicon subject. 
+
+All the logging has been updated to use `RCLCPP_INFO`
+
+
+
+
+
+
+
+
+
 ## Requirements
 
 ### Installation of dependencies

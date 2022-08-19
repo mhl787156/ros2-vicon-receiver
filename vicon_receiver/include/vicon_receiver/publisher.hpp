@@ -1,8 +1,8 @@
 #ifndef PUBLISHER_HPP
 #define PUBLISHER_HPP
-#include <unistd.h>
+// #include <unistd.h>
 #include "rclcpp/rclcpp.hpp"
-#include "vicon_receiver/msg/position.hpp"
+// #include "vicon_receiver/msg/position.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 
 // Struct used to hold segment data to transmit to the Publisher class.

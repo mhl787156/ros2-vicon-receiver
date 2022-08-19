@@ -16,8 +16,7 @@ Communicator::Communicator() : Node("vicon")
 bool Communicator::connect()
 {
     // connect to server
-    string msg = "Connecting to " + hostname + " ...";
-    cout << msg << endl;
+    RCLCPP_INFO(this->get_logger(), "Connecting to %s ...", hostname.c_str());
     int counter = 0;
     while (!vicon_client.IsConnected().Connected)
     {
@@ -25,13 +24,11 @@ bool Communicator::connect()
         if (!ok)
         {
             counter++;
-            msg = "Connect failed, reconnecting (" + std::to_string(counter) + ")...";
-            cout << msg << endl;
-            sleep(1);
+            RCLCPP_WARN(this->get_logger(), "Connect failed, reconnecting ( %d )...", counter);
+            Sleep(1);
         }
     }
-    msg = "Connection successfully established with " + hostname;
-    cout << msg << endl;
+    RCLCPP_INFO(this->get_logger(),  "Connection successfully established with %s", hostname.c_str());
 
     // perform further initialization
     vicon_client.EnableSegmentData();
@@ -44,8 +41,7 @@ bool Communicator::connect()
     vicon_client.SetStreamMode(StreamMode::ClientPull);
     vicon_client.SetBufferSize(buffer_size);
 
-    msg = "Initialization complete";
-    cout << msg << endl;
+    RCLCPP_INFO(this->get_logger(), "Initialisation complete");
 
     return true;
 }
@@ -54,17 +50,15 @@ bool Communicator::disconnect()
 {
     if (!vicon_client.IsConnected().Connected)
         return true;
-    sleep(1);
+    Sleep(1);
     vicon_client.DisableSegmentData();
     vicon_client.DisableMarkerData();
     vicon_client.DisableUnlabeledMarkerData();
     vicon_client.DisableDeviceData();
     vicon_client.DisableCentroidData();
-    string msg = "Disconnecting from " + hostname + "...";
-    cout << msg << endl;
+    RCLCPP_INFO(this->get_logger(), "Disconnecting from %s ...", hostname.c_str());
     vicon_client.Disconnect();
-    msg = "Successfully disconnected";
-    cout << msg << endl;
+    RCLCPP_INFO(this->get_logger(), "Successfully disconnected");
     if (!vicon_client.IsConnected().Connected)
         return true;
     return false;
@@ -89,7 +83,8 @@ void Communicator::get_frame()
 
         for (unsigned int segment_index = 0; segment_index < segment_count; ++segment_index)
         {
-            current_position.receive_time = this->now();
+            auto current_time = this->now();
+
             // get the segment name
             string segment_name = vicon_client.GetSegmentName(subject_name, segment_index).SegmentName;
 
@@ -106,6 +101,7 @@ void Communicator::get_frame()
                     current_position.translation[i] = trans.Translation[i];
                 current_position.rotation[i] = rot.Rotation[i];
             }
+            current_position.receive_time = current_time;
             current_position.segment_name = segment_name;
             current_position.subject_name = subject_name;
             current_position.translation_type = "Global";
@@ -148,8 +144,7 @@ void Communicator::create_publisher_thread(const string subject_name, const stri
     std::string topic_name = ns_name + "/" + subject_name + "/" + segment_name;
     std::string key = subject_name + "/" + segment_name;
 
-    string msg = "Creating publisher for segment " + segment_name + " from subject " + subject_name;
-    cout << msg << endl;
+    RCLCPP_INFO(this->get_logger(), "Creating publisher for segment %s from subject %s", segment_name.c_str(), subject_name.c_str());
 
     // create publisher
     boost::mutex::scoped_lock lock(mutex);
