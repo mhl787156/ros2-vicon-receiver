@@ -89,6 +89,7 @@ void Communicator::get_frame()
 
         for (unsigned int segment_index = 0; segment_index < segment_count; ++segment_index)
         {
+            current_position.receive_time = this->now();
             // get the segment name
             string segment_name = vicon_client.GetSegmentName(subject_name, segment_index).SegmentName;
 
