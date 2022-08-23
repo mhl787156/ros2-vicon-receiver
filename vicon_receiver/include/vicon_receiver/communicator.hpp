@@ -8,11 +8,30 @@
 #include <map>
 #include <chrono>
 #include <string>
-// #include <io.h>
+
+#ifdef _WIN32
+#include <io.h>
 #include <Windows.h>
+#endif
+
+#ifdef unix
+#include <unistd.h> 
+#endif
+
 #include "boost/thread.hpp"
 
 using namespace std;
+
+
+void mySleep(int sleepMs)
+{
+#ifdef unix
+    sleep(sleepMs);   // usleep takes sleep time in us (1 millionth of a second)
+#endif
+#ifdef _WIN32
+    Sleep(sleepMs);
+#endif
+}
 
 // Main Node class
 class Communicator : public rclcpp::Node

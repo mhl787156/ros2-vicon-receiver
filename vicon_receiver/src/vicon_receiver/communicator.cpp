@@ -25,7 +25,7 @@ bool Communicator::connect()
         {
             counter++;
             RCLCPP_WARN(this->get_logger(), "Connect failed, reconnecting ( %d )...", counter);
-            Sleep(1);
+            mySleep(1);
         }
     }
     RCLCPP_INFO(this->get_logger(),  "Connection successfully established with %s", hostname.c_str());
@@ -50,7 +50,7 @@ bool Communicator::disconnect()
 {
     if (!vicon_client.IsConnected().Connected)
         return true;
-    Sleep(1);
+    mySleep(1);
     vicon_client.DisableSegmentData();
     vicon_client.DisableMarkerData();
     vicon_client.DisableUnlabeledMarkerData();
@@ -88,7 +88,7 @@ void Communicator::get_frame()
             // get the segment name
             string segment_name = vicon_client.GetSegmentName(subject_name, segment_index).SegmentName;
 
-            // get position of segment
+            // get position of segment in millimeters
             PositionStruct current_position;
             Output_GetSegmentGlobalTranslation trans =
                 vicon_client.GetSegmentGlobalTranslation(subject_name, segment_name);
@@ -97,9 +97,10 @@ void Communicator::get_frame()
             
             for (size_t i = 0; i < 4; i++)
             {
+                // Set values and convert from millimeters to meters
                 if (i < 3)
-                    current_position.translation[i] = trans.Translation[i];
-                current_position.rotation[i] = rot.Rotation[i];
+                    current_position.translation[i] = trans.Translation[i] / 1000.0;
+                current_position.rotation[i] = rot.Rotation[i] / 1000.0;
             }
             current_position.receive_time = current_time;
             current_position.segment_name = segment_name;
@@ -148,7 +149,7 @@ void Communicator::create_publisher_thread(const string subject_name, const stri
 
     // create publisher
     boost::mutex::scoped_lock lock(mutex);
-    pub_map.insert(std::map<std::string, Publisher>::value_type(key, Publisher(topic_name, this)));
+    pub_map.insert(std::map<std::string, Publisher>::value_type(key, Publisher(subject_name, topic_name, this)));
 
     // we don't need the lock anymore, since rest is protected by is_ready
     lock.unlock();

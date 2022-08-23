@@ -1,26 +1,29 @@
 #include "vicon_receiver/publisher.hpp"
 
-Publisher::Publisher(std::string topic_name, rclcpp::Node* node)
+#include "rclcpp/qos.hpp"
+
+
+Publisher::Publisher(std::string subject_name, std::string topic_name, rclcpp::Node* node)
 {
-    position_publisher_ = node->create_publisher<geometry_msgs::msg::PoseStamped>(topic_name, 10);
+    if (subject_to_mavros_vehicle_map.find(subject_name) != subject_to_mavros_vehicle_map.end()) {
+        is_mavros = true;
+        auto mavros_topic_name = subject_to_mavros_vehicle_map.at(subject_name);
+
+        // rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+        // auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 5), qos_profile);
+
+        mavros_position_publisher_ = node->create_publisher<geometry_msgs::msg::PoseStamped>(mavros_topic_name, 10);
+        RCLCPP_INFO(node->get_logger(), "Detected as MAVROS, creating topic %s", mavros_topic_name.c_str());
+    } else {
+        position_publisher_ = node->create_publisher<geometry_msgs::msg::PoseStamped>(topic_name, 10);
+        RCLCPP_INFO(node->get_logger(), "Creating topic %s", topic_name.c_str());
+    }
+
     is_ready = true;
 }
 
 void Publisher::publish(PositionStruct p)
 {
-    // auto msg = std::make_shared<vicon_receiver::msg::Position>();
-    // msg->x_trans = p.translation[0];
-    // msg->y_trans = p.translation[1];
-    // msg->z_trans = p.translation[2];
-    // msg->x_rot = p.rotation[0];
-    // msg->y_rot = p.rotation[1];
-    // msg->z_rot = p.rotation[2];
-    // msg->w = p.rotation[3];
-    // msg->subject_name = p.subject_name;
-    // msg->segment_name = p.segment_name;
-    // msg->frame_number = p.frame_number;
-    // msg->translation_type = p.translation_type;
-    
     // Send using PoseStamped msg
     auto msg = std::make_shared<geometry_msgs::msg::PoseStamped>();
     // msg->header.seq = p.frame_number;
@@ -33,5 +36,10 @@ void Publisher::publish(PositionStruct p)
     msg->pose.orientation.y = p.rotation[1];
     msg->pose.orientation.z = p.rotation[2];
     msg->pose.orientation.w = p.rotation[3];
-    position_publisher_->publish(*msg);
+    
+    if(is_mavros) {
+        mavros_position_publisher_->publish(*msg);
+    } else {
+        position_publisher_->publish(*msg);
+    }
 }

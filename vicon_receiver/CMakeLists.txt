@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(vicon_receiver)
-set(Boost_USE_STATIC_LIBS ON)
+# set(Boost_USE_STATIC_LIBS ON)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
