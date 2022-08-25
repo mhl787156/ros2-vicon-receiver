@@ -13,8 +13,19 @@ Communicator::Communicator() : Node("vicon")
     this->get_parameter("namespace", ns_name);
 }
 
-bool Communicator::connect()
+Communicator::~Communicator() 
 {
+    this->disconnect();
+}
+
+bool Communicator::connect()
+{   
+    // If vicon client is already connected just ignore
+    if (vicon_client.IsConnected().Connected) {
+        return true;
+    }
+    RCLCPP_INFO(this->get_logger(), "Not Connected, Establishing Connection");
+
     // connect to server
     RCLCPP_INFO(this->get_logger(), "Connecting to %s ...", hostname.c_str());
     int counter = 0;
@@ -159,13 +170,13 @@ int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
     auto node = std::make_shared<Communicator>();
-    node->connect();
-
+    
     while (rclcpp::ok()){
+        node->connect();
         node->get_frame();
     }
 
-    node->disconnect();
+    // node->disconnect();
     rclcpp::shutdown();
     return 0;
 }

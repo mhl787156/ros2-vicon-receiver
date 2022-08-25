@@ -46,6 +46,7 @@ private:
 
 public:
     Communicator();
+    ~Communicator();
 
     // Initialises the connection to the DataStream server
     bool connect();
