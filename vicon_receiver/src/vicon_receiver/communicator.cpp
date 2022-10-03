@@ -111,7 +111,7 @@ void Communicator::get_frame()
                 // Set values and convert from millimeters to meters
                 if (i < 3)
                     current_position.translation[i] = trans.Translation[i] / 1000.0;
-                current_position.rotation[i] = rot.Rotation[i] / 1000.0;
+                current_position.rotation[i] = rot.Rotation[i];
             }
             current_position.receive_time = current_time;
             current_position.segment_name = segment_name;
