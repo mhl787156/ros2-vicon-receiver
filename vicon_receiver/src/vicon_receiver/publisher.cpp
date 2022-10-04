@@ -32,8 +32,9 @@ void Publisher::publish(PositionStruct p)
     // Change to ROS frame?
     // ROS X = Vicon -Y
     // ROS Y = Vicon X
-    msg->pose.position.x = -p.translation[1];
-    msg->pose.position.y = p.translation[0];
+    // Rotation around Z axis by 90 degrees from vicon->ros2
+    msg->pose.position.x = p.translation[0];
+    msg->pose.position.y = p.translation[1];
     msg->pose.position.z = p.translation[2];
     msg->pose.orientation.x = p.rotation[0];
     msg->pose.orientation.y = p.rotation[1];
