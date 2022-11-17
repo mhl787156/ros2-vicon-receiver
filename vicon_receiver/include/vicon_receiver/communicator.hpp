@@ -2,6 +2,7 @@
 #define COMMUNICATOR_HPP
 
 #include "DataStreamClient.h"
+#include "DataStreamRetimingClient.h"
 #include "rclcpp/rclcpp.hpp"
 #include "publisher.hpp"
 #include <iostream>
@@ -37,11 +38,13 @@ void mySleep(int sleepMs)
 class Communicator : public rclcpp::Node
 {
 private:
-    ViconDataStreamSDK::CPP::Client vicon_client;
+    // ViconDataStreamSDK::CPP::Client vicon_client;
+    ViconDataStreamSDK::CPP::RetimingClient vicon_client;
     string hostname;
     unsigned int buffer_size;
     string ns_name;
     float frame_rate;
+    uint32_t frame_number;
     map<string, Publisher> pub_map;
     boost::mutex mutex;
 

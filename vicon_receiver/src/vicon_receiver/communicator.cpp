@@ -33,7 +33,9 @@ bool Communicator::connect()
     int counter = 0;
     while (!vicon_client.IsConnected().Connected)
     {
-        bool ok = (vicon_client.Connect(hostname).Result == Result::Success);
+        // Connect to the client and set the frame rate
+        this->get_parameter("output_frame_rate_hz", frame_rate);
+        bool ok = (vicon_client.Connect(hostname, this->frame_rate).Result == Result::Success);
         if (!ok)
         {
             counter++;
@@ -44,16 +46,7 @@ bool Communicator::connect()
     RCLCPP_INFO(this->get_logger(),  "Connection successfully established with %s", hostname.c_str());
 
     // perform further initialization
-    vicon_client.EnableSegmentData();
-    vicon_client.EnableMarkerData();
-    vicon_client.EnableUnlabeledMarkerData();
-    vicon_client.EnableMarkerRayData();
-    vicon_client.EnableDeviceData();
-    vicon_client.EnableDebugData();
-
-    vicon_client.SetStreamMode(StreamMode::ClientPull);
-    vicon_client.SetBufferSize(buffer_size);
-
+    vicon_client.EnableLightweightSegmentData();
     RCLCPP_INFO(this->get_logger(), "Initialisation complete");
 
     return true;
@@ -64,11 +57,7 @@ bool Communicator::disconnect()
     if (!vicon_client.IsConnected().Connected)
         return true;
     mySleep(1);
-    vicon_client.DisableSegmentData();
-    vicon_client.DisableMarkerData();
-    vicon_client.DisableUnlabeledMarkerData();
-    vicon_client.DisableDeviceData();
-    vicon_client.DisableCentroidData();
+    vicon_client.DisableLightweightSegmentData();
     RCLCPP_INFO(this->get_logger(), "Disconnecting from %s ...", hostname.c_str());
     vicon_client.Disconnect();
     RCLCPP_INFO(this->get_logger(), "Successfully disconnected");
@@ -79,8 +68,9 @@ bool Communicator::disconnect()
 
 void Communicator::get_frame()
 {
-    vicon_client.GetFrame();
-    Output_GetFrameNumber frame_number = vicon_client.GetFrameNumber();
+    vicon_client.WaitForFrame();
+    frame_number++;
+    // Output_GetFrameNumber frame_number = vicon_client.GetFrameNumber();
 
     unsigned int subject_count = vicon_client.GetSubjectCount().SubjectCount;
 
@@ -119,7 +109,8 @@ void Communicator::get_frame()
             current_position.segment_name = segment_name;
             current_position.subject_name = subject_name;
             current_position.translation_type = "Global";
-            current_position.frame_number = frame_number.FrameNumber;
+            // current_position.frame_number = frame_number.FrameNumber;
+            current_position.frame_number = frame_number;
 
             // send position to publisher
             boost::mutex::scoped_try_lock lock(mutex);
