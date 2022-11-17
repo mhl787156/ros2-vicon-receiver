@@ -11,7 +11,7 @@ RUN apt-get update \
 
 WORKDIR /ros_ws
 
-COPY DataStreamSDK_10.1 /ros_ws/DataStreamSDK_10.1
+COPY DataStreamSDK_1.11 /ros_ws/DataStreamSDK_1.11
 COPY install_libs.sh install_libs.sh
 RUN ./install_libs.sh
 

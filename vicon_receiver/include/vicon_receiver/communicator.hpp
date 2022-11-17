@@ -41,6 +41,7 @@ private:
     string hostname;
     unsigned int buffer_size;
     string ns_name;
+    float frame_rate;
     map<string, Publisher> pub_map;
     boost::mutex mutex;
 

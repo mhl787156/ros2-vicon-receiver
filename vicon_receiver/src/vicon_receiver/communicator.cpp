@@ -8,9 +8,11 @@ Communicator::Communicator() : Node("vicon")
     this->declare_parameter<std::string>("hostname", "127.0.0.1");
     this->declare_parameter<int>("buffer_size", 200);
     this->declare_parameter<std::string>("namespace", "vicon");
+    this->declare_parameter<float>("output_frame_rate_hz", 50);
     this->get_parameter("hostname", hostname);
     this->get_parameter("buffer_size", buffer_size);
     this->get_parameter("namespace", ns_name);
+    this->get_parameter("output_frame_rate_hz", frame_rate);
 }
 
 Communicator::~Communicator() 
