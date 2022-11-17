@@ -44,7 +44,7 @@ private:
     unsigned int buffer_size;
     string ns_name;
     float frame_rate;
-    uint32_t frame_number;
+    uint32_t frame_number = 0;
     map<string, Publisher> pub_map;
     boost::mutex mutex;
 
