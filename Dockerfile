@@ -11,9 +11,11 @@ RUN apt-get update \
 
 WORKDIR /ros_ws
 
-COPY DataStreamSDK_1.11 /ros_ws/DataStreamSDK_1.11
-COPY install_libs.sh install_libs.sh
-RUN ./install_libs.sh
+# Install DataStreamSDK
+COPY DataStreamSDK_1.11/* /usr/lib/
+RUN chmod -R 0755 /usr/lib \
+    && export VICON_LIBRARY=/usr/lib \
+    && ldconfig
 
 # Copy the receiver accross and build
 COPY vicon_receiver /ros_ws/src/vicon_receiver
