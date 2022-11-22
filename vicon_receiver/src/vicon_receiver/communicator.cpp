@@ -46,7 +46,7 @@ bool Communicator::connect()
     RCLCPP_INFO(this->get_logger(),  "Connection successfully established with %s", hostname.c_str());
 
     // perform further initialization
-    vicon_client.EnableLightweightSegmentData();
+    // vicon_client.EnableLightweightSegmentData();
     RCLCPP_INFO(this->get_logger(), "Initialisation complete");
 
     return true;
@@ -57,7 +57,7 @@ bool Communicator::disconnect()
     if (!vicon_client.IsConnected().Connected)
         return true;
     mySleep(1);
-    vicon_client.DisableLightweightSegmentData();
+    // vicon_client.DisableLightweightSegmentData();
     RCLCPP_INFO(this->get_logger(), "Disconnecting from %s ...", hostname.c_str());
     vicon_client.Disconnect();
     RCLCPP_INFO(this->get_logger(), "Successfully disconnected");
