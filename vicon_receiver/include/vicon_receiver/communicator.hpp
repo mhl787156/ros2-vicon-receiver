@@ -10,6 +10,8 @@
 #include <chrono>
 #include <string>
 
+#include "blocking_collections.h"
+
 #ifdef _WIN32
 #include <io.h>
 #include <Windows.h>
@@ -22,6 +24,7 @@
 #include "boost/thread.hpp"
 
 using namespace std;
+using namespace code_machina;
 
 
 void mySleep(int sleepMs)
@@ -45,9 +48,11 @@ private:
     string ns_name;
     float frame_rate;
     uint32_t frame_number = 0;
-    map<string, Publisher> pub_map;
-    boost::mutex mutex;
+    // map<string, Publisher> pub_map;
+    map<string, shared_ptr<BlockingCollection<PositionStruct>>> queue_map;
+    // boost::mutex mutex;
 
+    void queue_monitor(const string subject_name, const string segment_name, shared_ptr<BlockingCollection<PositionStruct>> queue);
 public:
     Communicator();
     ~Communicator();

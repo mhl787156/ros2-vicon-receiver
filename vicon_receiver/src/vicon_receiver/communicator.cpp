@@ -1,6 +1,7 @@
 #include "vicon_receiver/communicator.hpp"
 
 using namespace ViconDataStreamSDK::CPP;
+using namespace code_machina;
 
 Communicator::Communicator() : Node("vicon")
 {
@@ -74,8 +75,6 @@ void Communicator::get_frame()
 
     unsigned int subject_count = vicon_client.GetSubjectCount().SubjectCount;
 
-    map<string, Publisher>::iterator pub_it;
-
     for (unsigned int subject_index = 0; subject_index < subject_count; ++subject_index)
     {
         // get the subject name
@@ -109,64 +108,74 @@ void Communicator::get_frame()
             current_position.segment_name = segment_name;
             current_position.subject_name = subject_name;
             current_position.translation_type = "Global";
-            // current_position.frame_number = frame_number.FrameNumber;
             current_position.frame_number = frame_number;
 
             // send position to publisher
-            boost::mutex::scoped_try_lock lock(mutex);
-
-            if (lock.owns_lock())
+            auto queue_map_it = queue_map.find(subject_name + "/" + segment_name);
+            if (queue_map_it != queue_map.end())
             {
-                // get publisher
-                pub_it = pub_map.find(subject_name + "/" + segment_name);
-                if (pub_it != pub_map.end())
-                {
-                    Publisher & pub = pub_it->second;
-
-                    if (pub.is_ready)
-                    {
-                        pub.publish(current_position);
-                    }
-                }
-                else
-                {
-                    // create publisher if not already available
-                    lock.unlock();
-                    create_publisher(subject_name, segment_name);
-                }
+                // send position to correct queue
+                queue_map_it->second->add(current_position);
+            }
+            else
+            {
+                create_publisher(subject_name, segment_name);
             }
         }
     }
 }
 
-void Communicator::create_publisher(const string subject_name, const string segment_name)
-{
-    boost::thread(&Communicator::create_publisher_thread, this, subject_name, segment_name);
-}
 
-void Communicator::create_publisher_thread(const string subject_name, const string segment_name)
+void Communicator::create_publisher(const string subject_name, const string segment_name)
 {
     std::string topic_name = ns_name + "/" + subject_name + "/" + segment_name;
     std::string key = subject_name + "/" + segment_name;
 
     RCLCPP_INFO(this->get_logger(), "Creating publisher for segment %s from subject %s", segment_name.c_str(), subject_name.c_str());
 
-    // create publisher
-    boost::mutex::scoped_lock lock(mutex);
-    pub_map.insert(std::map<std::string, Publisher>::value_type(key, Publisher(subject_name, topic_name, this)));
+    auto queue = std::make_shared<BlockingCollection<PositionStruct>>(100);
 
-    // we don't need the lock anymore, since rest is protected by is_ready
-    lock.unlock();
+    // create publisher
+    queue_map.insert(std::map<std::string, shared_ptr<BlockingCollection<PositionStruct>>>::value_type(key, queue));
+
+    boost::thread(&Communicator::queue_monitor, this, subject_name, topic_name, queue);
+}
+
+// Also includes queue to monitor
+void Communicator::queue_monitor(const string subject_name, const string topic_name, shared_ptr<BlockingCollection<PositionStruct>> queue) {
+    Publisher publisher(subject_name, topic_name, this);
+
+    while (true) {
+
+        PositionStruct data;
+      
+        // take will block if there is no data to be taken
+        auto status = queue->take(data);
+        
+        if(status == BlockingCollectionStatus::Ok)
+        {
+            // RCLCPP_INFO(this->get_logger(), "Processing data");
+            publisher.publish(data);
+        }
+        
+        // Status can also return BlockingCollectionStatus::Completed meaning take was called 
+        // on a completed collection. Some other thread can call complete_adding after we pass 
+        // the is_completed check but before we call take. In this example, we can ignore that
+        // status since the loop will break on the next iteration.
+    }
 }
 
 int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
+    // rclcpp::executors::MultiThreadedExecutor executor;
     auto node = std::make_shared<Communicator>();
+    // executor.add_node(node);
     
     while (rclcpp::ok()){
         node->connect();
         node->get_frame();
+        // executor.spin_once();
     }
 
     // node->disconnect();

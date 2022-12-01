@@ -1,6 +1,7 @@
 #ifndef PUBLISHER_HPP
 #define PUBLISHER_HPP
 #include <map>
+#include <vector>
 
 // #include <unistd.h>
 #include "rclcpp/rclcpp.hpp"
@@ -37,6 +38,16 @@ private:
 public:
     bool is_ready = false;
     bool is_mavros = false;
+    std::string topic_name;
+    std::string subject_name;
+    rclcpp::Node* node;
+
+    int moving_average_buffer_length = 50;
+    int previous_publish_times_index = 0;
+    std::vector<double> previous_publish_times;
+    rclcpp::Time previous_publish_time;
+
+    std::vector<double> previous_publish_only_times;
 
     Publisher(std::string subject_name, std::string topic_name, rclcpp::Node* node);
 
